@@ -1,7 +1,7 @@
-package com.inventory;
+package com.inventory.helper;
 
 import com.inventory.model.InventorySearchDTO;
-import com.inventory.repository.InventoryEntity;
+import com.inventory.entity.InventoryEntity;
 
 public class InventoryHelper {
 

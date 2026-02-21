@@ -1,0 +1,112 @@
+server:
+  port: 8080
+
+
+spring:
+  datasource:
+    url: jdbc:postgresql://host.docker.internal:5432/inventory_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+    # HikariCP Connection Pool Settings
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+
+openapi: 3.0.3
+info:
+  title: Inventory Management System API
+  description: API for searching and managing detailed inventory records including manufacturing, expiry, and seller data.
+  version: 1.0.0
+
+paths:
+  /inventory/search:
+    get:
+      tags:
+        - Inventory Search
+      summary: Advanced inventory search with multiple filters
+      description: |
+        Provides dynamic filtering for the inventory system. 
+        Supports text search, range filters for price/dates, and pagination.
+      parameters:
+        # We define the parameters here to map to the SearchDTO fields
+        - name: name
+          in: query
+          description: Partial match for item name
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          description: Minimum price filter
+          schema:
+            type: number
+            format: double
+            minimum: 0
+        - name: manufacturedAfter
+          in: query
+          description: ISO-8601 date format (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Zero-based page index
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Number of records per page
+          schema:
+            type: integer
+            default: 20
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [id, name, price, stock, manufacturingDate]
+            default: id
+      responses:
+        '200':
+          description: Successfully filtered inventory list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryPagedResponse'
+
+components:
+  schemas:
+    # This represents the structure of the data your search returns
+    InventoryPagedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryItem'
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+        last:
+          type: boolean
+          description: Indicates if this is the last page
